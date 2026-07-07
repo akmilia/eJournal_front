@@ -1,5 +1,6 @@
+// src/components/JournalTable.tsx
 import { useState } from 'react';
-import { JournalData, ColumnConfig } from '../types';
+import { JournalData } from '../types';
 import api from '../api/axios';
 import { AddColumnModal } from './AddColumnModal';
 
@@ -38,7 +39,7 @@ export const JournalTable = ({ journalData, groupSubjectId, onUpdate }: Props) =
       setLoading(true);
       await api.patch(`/journals/records/${recordId}`, {
         field: field,
-        value: editValue
+        value: editValue,
       });
       onUpdate();
       setEditingCell(null);
@@ -80,41 +81,39 @@ export const JournalTable = ({ journalData, groupSubjectId, onUpdate }: Props) =
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 overflow-hidden">
+    <div>
       {/* Заголовок таблицы */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-5 border-b border-gray-100">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-6 border-b border-gray-100">
         <div>
-          <h2 className="text-xl font-bold text-gray-800">📊 Журнал</h2>
-          <p className="text-base text-gray-500">
+          <h2 className="text-2xl font-bold text-primary">📊 Журнал</h2>
+          <p className="text-base text-secondary">
             {students.length} студентов · {columns.length} колонок
           </p>
         </div>
-        <button onClick={() => setShowModal(true)} className="btn-success text-base">
+        <button onClick={() => setShowModal(true)} className="btn-primary">
           ➕ Добавить колонку
         </button>
       </div>
 
       {/* Таблица */}
-      <div className="overflow-x-auto table-container">
+      <div className="journal-table-container">
         <table>
           <thead>
             <tr>
-              <th className="sticky-col text-left" style={{ minWidth: '180px' }}>
-                Студент
-              </th>
+              <th className="sticky-col">Студент</th>
               {columns.map((col) => (
-                <th key={col.key} className="relative group text-left" style={{ minWidth: '120px' }}>
+                <th key={col.key} className="relative group">
                   <div className="flex items-center justify-between gap-2">
                     <span>{col.title}</span>
                     <button
                       onClick={() => handleDeleteColumn(col.key)}
-                      className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition text-base"
+                      className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition text-sm"
                     >
                       ✕
                     </button>
                   </div>
                   {col.max_score !== undefined && (
-                    <div className="text-base text-gray-400 font-normal">макс: {col.max_score}</div>
+                    <div className="text-sm text-secondary font-normal">макс: {col.max_score}</div>
                   )}
                 </th>
               ))}
@@ -122,16 +121,14 @@ export const JournalTable = ({ journalData, groupSubjectId, onUpdate }: Props) =
           </thead>
           <tbody>
             {students.map((student) => (
-              <tr key={student.student_id} className="hover:bg-indigo-50/50 transition">
-                <td className="sticky-col font-medium text-gray-800">
-                  {student.name}
-                </td>
+              <tr key={student.student_id}>
+                <td className="sticky-col">{student.name}</td>
                 {columns.map((col) => {
                   const value = student.values?.[col.key];
                   return (
                     <td
                       key={col.key}
-                      className="cursor-pointer hover:bg-indigo-100/50 transition rounded-lg"
+                      className="cell-clickable"
                       onClick={() => handleCellClick(student.student_id, col.key, value)}
                     >
                       <div className="flex items-center gap-1">
@@ -149,14 +146,15 @@ export const JournalTable = ({ journalData, groupSubjectId, onUpdate }: Props) =
 
       {/* Модалка редактирования */}
       {editingCell && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">✏️ Изменить значение</h3>
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setEditingCell(null); }}>
+          <div className="modal-content">
+            <h3 className="modal-title">✏️ Изменить значение</h3>
+            <p className="modal-subtitle">Введите новое значение для ячейки</p>
             <input
               type="text"
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition mb-4"
+              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-lg focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition mb-5"
               placeholder="Введите новое значение"
               autoFocus
               onKeyDown={(e) => {
@@ -164,18 +162,11 @@ export const JournalTable = ({ journalData, groupSubjectId, onUpdate }: Props) =
                 if (e.key === 'Escape') setEditingCell(null);
               }}
             />
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setEditingCell(null)}
-                className="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl transition font-medium"
-              >
+            <div className="modal-actions">
+              <button onClick={() => setEditingCell(null)} className="btn-secondary">
                 Отмена
               </button>
-              <button
-                onClick={handleCellSave}
-                disabled={loading}
-                className="btn-primary py-2.5 disabled:opacity-50"
-              >
+              <button onClick={handleCellSave} disabled={loading} className="btn-primary">
                 {loading ? 'Сохранение...' : 'Сохранить'}
               </button>
             </div>

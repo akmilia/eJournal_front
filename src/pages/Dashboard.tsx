@@ -1,27 +1,40 @@
+// src/pages/Dashboard.tsx (обновлённая версия)
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { Subject, JournalListItem } from '../types';
+import { Subject, JournalListItem, Group, Student } from '../types';
 import { Spinner } from '../components/Spinner';
 import { CreateSubjectModal } from '../components/CreateSubjectModal';
 import { CreateJournalModal } from '../components/CreateJournalModal';
+import { CreateGroupModal } from '../components/CreateGroupModal';
+import { GroupStudentsModal } from '../components/GroupStudentsModal';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSubjectId, setExpandedSubjectId] = useState<number | null>(null);
   const [journalsMap, setJournalsMap] = useState<Record<number, JournalListItem[]>>({});
+  
+  // Модалки
   const [showCreateSubject, setShowCreateSubject] = useState(false);
   const [showCreateJournal, setShowCreateJournal] = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showGroupStudents, setShowGroupStudents] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [selectedSubjectForJournal, setSelectedSubjectForJournal] = useState<{ id: number; name: string } | null>(null);
   const [teacherName, setTeacherName] = useState('Преподаватель');
 
-  const fetchSubjects = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/journals/subjects');
-      setSubjects(res.data);
+      const [subRes, groupsRes] = await Promise.all([
+        api.get('/journals/subjects'),
+        api.get('/journals/groups/all'),
+      ]);
+      setSubjects(subRes.data);
+      setGroups(groupsRes.data);
     } catch (error) {
       console.error(error);
       if (error && typeof error === 'object' && 'response' in error) {
@@ -37,7 +50,7 @@ export const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchSubjects();
+    fetchData();
   }, [navigate]);
 
   const fetchJournalsForSubject = async (subjectId: number) => {
@@ -55,7 +68,7 @@ export const Dashboard = () => {
     }
   };
 
-  const toggleExpand = (subjectId: number) => {
+  const toggleSubjectExpand = (subjectId: number) => {
     if (expandedSubjectId === subjectId) {
       setExpandedSubjectId(null);
     } else {
@@ -74,7 +87,7 @@ export const Dashboard = () => {
   const handleCreateSubject = async (name: string, credits: number) => {
     try {
       await api.post('/journals/subjects', { name, credits });
-      await fetchSubjects();
+      await fetchData();
     } catch (error: any) {
       alert(error.response?.data?.detail || 'Ошибка создания предмета');
     }
@@ -90,6 +103,7 @@ export const Dashboard = () => {
       if (expandedSubjectId) {
         await fetchJournalsForSubject(expandedSubjectId);
       }
+      await fetchData();
     } catch (error: any) {
       alert(error.response?.data?.detail || 'Ошибка создания журнала');
     }
@@ -100,75 +114,113 @@ export const Dashboard = () => {
     setShowCreateJournal(true);
   };
 
+  const openGroupStudents = (group: Group) => {
+    setSelectedGroup(group);
+    setShowGroupStudents(true);
+  };
+
   if (loading) return <Spinner />;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Шапка на всю ширину с отступами */}
-      <header className="bg-white border-b border-gray-200 py-6 px-10 flex items-center justify-between shadow-sm">
-        <div>
-          <h1 className="text-3xl font-bold text-primary">eJournal</h1>
-          <p className="text-lg text-secondary mt-1">Добро пожаловать, {teacherName}</p>
+      <header className="dashboard-header">
+        <div className="logo">
+          <h1>eJournal</h1>
+          <p>Добро пожаловать, {teacherName}</p>
         </div>
-        <button onClick={handleLogout} className="btn-danger text-lg px-8 py-3">
+        <button onClick={handleLogout} className="btn-danger">
           Выйти
         </button>
       </header>
 
-      <div className="max-w-6xl mx-auto px-10 py-10">
-        <div className="flex justify-end mb-8">
-          <button onClick={() => setShowCreateSubject(true)} className="btn-primary flex items-center gap-2 text-lg px-8 py-3.5">
-            <span className="text-2xl leading-none">+</span> Создать предмет
-          </button>
+      <div className="dashboard-content">
+        {/* ГРУППЫ — вертикальный список как предметы */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-primary">👥 Группы</h2>
+            <button onClick={() => setShowCreateGroup(true)} className="btn-primary">
+              <span className="text-xl leading-none">+</span> Создать группу
+            </button>
+          </div>
+
+          {groups.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
+              <p className="text-secondary text-lg">Нет групп. Создайте первую!</p>
+            </div>
+          ) : (
+            groups.map((group) => (
+              <div key={group.id} className="subject-card">
+                <div className="subject-header">
+                  <div>
+                    <h2>{group.name}</h2>
+                    <p className="credits">Курс {group.course} · {group.students?.length || 0} студентов</p>
+                  </div>
+                  <button
+                    onClick={() => openGroupStudents(group)}
+                    className="expand-btn"
+                  >
+                    Просмотр →
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
-        <div className="space-y-5">
+        {/* ПРЕДМЕТЫ — вертикальный список */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-primary">📚 Мои предметы</h2>
+            <button onClick={() => setShowCreateSubject(true)} className="btn-primary">
+              <span className="text-xl leading-none">+</span> Создать предмет
+            </button>
+          </div>
+
           {subjects.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
-              <p className="text-secondary text-xl">У вас пока нет предметов. Создайте первый!</p>
+            <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
+              <p className="text-secondary text-lg">У вас пока нет предметов. Создайте первый!</p>
             </div>
           ) : (
             subjects.map((subject) => (
               <div key={subject.id} className="subject-card">
-                <div className="flex items-center justify-between">
+                <div className="subject-header">
                   <div>
-                    <h2 className="text-2xl font-semibold text-primary">{subject.name}</h2>
-                    <p className="text-lg text-secondary mt-1">{subject.credits} зач. ед.</p>
+                    <h2>{subject.name}</h2>
+                    <p className="credits">{subject.credits} зач. ед.</p>
                   </div>
                   <button
-                    onClick={() => toggleExpand(subject.id)}
-                    className="text-primary hover:text-[#1d4f38] font-medium text-lg flex items-center gap-2"
+                    onClick={() => toggleSubjectExpand(subject.id)}
+                    className="expand-btn"
                   >
                     {expandedSubjectId === subject.id ? 'Свернуть ▲' : 'Развернуть ▼'}
                   </button>
                 </div>
 
                 {expandedSubjectId === subject.id && (
-                  <div className="mt-5 pt-5 border-t border-gray-200 animate-fade-in">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-medium text-secondary">Журналы по предмету</h3>
+                  <div className="journals-section">
+                    <div className="journals-header">
+                      <h3>Журналы по предмету</h3>
                       <button
                         onClick={() => openCreateJournal(subject.id, subject.name)}
-                        className="text-lg text-primary hover:text-[#1d4f38] font-medium flex items-center gap-1"
+                        className="add-btn"
                       >
-                        + Добавить журнал
+                        <span className="text-xl leading-none">+</span> Добавить журнал
                       </button>
                     </div>
+
                     {journalsMap[subject.id]?.length ? (
-                      <div className="space-y-3">
-                        {journalsMap[subject.id].map((j) => (
-                          <div
-                            key={j.group_subject_id}
-                            onClick={() => navigate(`/journal/${j.group_subject_id}`)}
-                            className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 cursor-pointer transition"
-                          >
-                            <span className="font-medium text-primary text-lg">{j.group_name}</span>
-                            <span className="text-lg text-secondary">Семестр {j.semester}</span>
-                          </div>
-                        ))}
-                      </div>
+                      journalsMap[subject.id].map((j) => (
+                        <div
+                          key={j.group_subject_id}
+                          className="journal-item"
+                          onClick={() => navigate(`/journal/${j.group_subject_id}`)}
+                        >
+                          <span className="journal-name">{j.group_name}</span>
+                          <span className="journal-semester">Семестр {j.semester}</span>
+                        </div>
+                      ))
                     ) : (
-                      <p className="text-lg text-secondary">Нет журналов. Добавьте первый.</p>
+                      <p className="text-base text-secondary">Нет журналов. Добавьте первый.</p>
                     )}
                   </div>
                 )}
@@ -178,6 +230,12 @@ export const Dashboard = () => {
         </div>
       </div>
 
+      {/* Модалки */}
+      <CreateGroupModal
+        isOpen={showCreateGroup}
+        onClose={() => setShowCreateGroup(false)}
+        onCreate={fetchData}
+      />
       <CreateSubjectModal
         isOpen={showCreateSubject}
         onClose={() => setShowCreateSubject(false)}
@@ -189,6 +247,14 @@ export const Dashboard = () => {
         subjectId={selectedSubjectForJournal?.id || 0}
         subjectName={selectedSubjectForJournal?.name || ''}
         onCreate={handleCreateJournal}
+      />
+      <GroupStudentsModal
+        isOpen={showGroupStudents}
+        onClose={() => setShowGroupStudents(false)}
+        groupId={selectedGroup?.id || 0}
+        groupName={selectedGroup?.name || ''}
+        students={selectedGroup?.students || []}
+        onGroupDeleted={fetchData}
       />
     </div>
   );

@@ -1,3 +1,4 @@
+// src/types/index.ts
 export interface LoginRequest {
   email: string;
   password: string;
@@ -38,9 +39,10 @@ export interface ColumnConfig {
 export interface StudentRow {
   student_id: number;
   name: string;
-  record_id: number;   // <-- ДОБАВЛЯЕМ
+  record_id: number;
   values: Record<string, any>;
 }
+
 export interface JournalData {
   group_subject_id: number;
   columns_config: ColumnConfig[];
@@ -56,24 +58,22 @@ export interface AddColumnRequest {
 export interface UpdateCellRequest {
   field: string;
   value: any;
-} 
-
-export interface Subject {
+}
+export interface Group {
   id: number;
   name: string;
-  credits: number;
+  course: number;
+  students: Student[];
 }
 
-export interface GroupInfo {
-  group_id: number;
-  group_name: string;
-  group_subject_id: number;
-  semester: number;
+export interface Student {
+  id: number;
+  full_name: string;
 }
-
-export interface JournalListItem {
-  group_subject_id: number;
-  group_name: string;
-  subject_name: string;
-  semester: number;
+export interface CreateGroupRequest {
+  name: string;
+  course: number;
+  headman_id?: number;
+  student_ids?: number[];
+  new_students?: string[]; // ФИО новых студентов
 }

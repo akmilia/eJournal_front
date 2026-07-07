@@ -46,37 +46,41 @@ export const CreateSubjectModal = ({ isOpen, onClose, onCreate }: Props) => {
   return (
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal-content">
-        <h3 className="text-xl font-bold text-primary mb-4">Создать предмет</h3>
+        <h3 className="modal-title">📘 Создать предмет</h3>
+        <p className="modal-subtitle">Добавьте новый предмет в свой список</p>
+
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-secondary mb-1">Название</label>
+          <div className="field">
+            <label>Название предмета</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className={`input-field ${error ? 'error' : ''}`}
+              className={error ? 'error' : ''}
               placeholder="Например: Математика"
               autoFocus
             />
           </div>
-          <div className="mb-5">
-            <label className="block text-sm font-medium text-secondary mb-1">Кредиты</label>
+
+          <div className="field">
+            <label>Кредиты (зачётные единицы)</label>
             <input
               type="number"
               value={credits}
               onChange={(e) => setCredits(Number(e.target.value))}
-              className="input-field"
               min="1"
               max="10"
             />
           </div>
-          {error && <p className="text-accent text-sm mb-3">{error}</p>}
-          <div className="flex justify-end gap-3">
+
+          {error && <div className="modal-error">⚠️ {error}</div>}
+
+          <div className="modal-actions">
             <button type="button" onClick={onClose} className="btn-secondary">
               Отмена
             </button>
             <button type="submit" disabled={loading} className="btn-primary">
-              {loading ? 'Создание...' : 'Создать'}
+              {loading ? 'Создание...' : 'Создать предмет'}
             </button>
           </div>
         </form>
