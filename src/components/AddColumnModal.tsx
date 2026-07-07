@@ -95,3 +95,4 @@ export const AddColumnModal = ({ isOpen, onClose, onAdd }: Props) => {
       </div>
     </div>
   );
+};
