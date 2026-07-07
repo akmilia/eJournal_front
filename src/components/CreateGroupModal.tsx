@@ -36,9 +36,12 @@ export const CreateGroupModal = ({ isOpen, onClose, onCreate }: Props) => {
   const fetchAvailableStudents = async () => {
     try {
       const res = await api.get('/journals/students/available');
-      setAvailableStudents(res.data);
+      console.log('Загружены студенты:', res.data); // Для отладки
+      // Убеждаемся, что данные — это массив
+      setAvailableStudents(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error('Ошибка загрузки студентов', err);
+      setAvailableStudents([]);
     }
   };
 
@@ -73,7 +76,6 @@ export const CreateGroupModal = ({ isOpen, onClose, onCreate }: Props) => {
       });
       onCreate();
       onClose();
-      // Сброс формы
       setName('');
       setCourse(1);
       setSelectedStudents([]);
@@ -115,7 +117,7 @@ export const CreateGroupModal = ({ isOpen, onClose, onCreate }: Props) => {
             />
           </div>
 
-          <div className="field">
+          {/* <div className="field">
             <label>Добавить существующих студентов</label>
             <select
               value=""
@@ -139,7 +141,7 @@ export const CreateGroupModal = ({ isOpen, onClose, onCreate }: Props) => {
                   const student = availableStudents.find(s => s.id === id);
                   return (
                     <span key={id} className="bg-gray-100 px-3 py-1.5 rounded-lg text-sm flex items-center gap-2">
-                      {student?.full_name}
+                      {student?.full_name || 'Студент'}
                       <button
                         type="button"
                         onClick={() => setSelectedStudents(selectedStudents.filter(s => s !== id))}
@@ -152,10 +154,10 @@ export const CreateGroupModal = ({ isOpen, onClose, onCreate }: Props) => {
                 })}
               </div>
             )}
-          </div>
+          </div> */}
 
           <div className="field">
-            <label>Или создайте новых студентов</label>
+            <label>Создайте новых студентов</label>
             <div className="flex gap-2">
               <input
                 type="text"

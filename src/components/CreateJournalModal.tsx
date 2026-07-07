@@ -1,3 +1,4 @@
+// src/components/CreateJournalModal.tsx
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
 
@@ -25,20 +26,25 @@ export const CreateJournalModal = ({ isOpen, onClose, subjectId, subjectName, on
   useEffect(() => {
     if (isOpen) {
       document.body.classList.add('modal-open');
-      const fetchGroups = async () => {
-        try {
-          const res = await api.get('/journals/groups');
-          setGroups(res.data);
-        } catch {
-          setError('Не удалось загрузить группы');
-        }
-      };
       fetchGroups();
     } else {
       document.body.classList.remove('modal-open');
     }
     return () => document.body.classList.remove('modal-open');
   }, [isOpen]);
+
+  const fetchGroups = async () => {
+    try {
+      const res = await api.get('/journals/groups/all');
+      console.log('Загружены группы для журнала:', res.data); // Для отладки
+      // Убеждаемся, что данные — это массив
+      setGroups(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error('Ошибка загрузки групп', err);
+      setError('Не удалось загрузить группы');
+      setGroups([]);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -73,7 +79,7 @@ export const CreateJournalModal = ({ isOpen, onClose, subjectId, subjectName, on
             <label>Группа</label>
             <select
               value={selectedGroupId || ''}
-              onChange={(e) => setSelectedGroupId(Number(e.target.value))}
+              onChange={(e) => setSelectedGroupId(e.target.value ? Number(e.target.value) : null)}
               className={error ? 'error' : ''}
               required
             >
