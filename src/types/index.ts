@@ -56,4 +56,24 @@ export interface AddColumnRequest {
 export interface UpdateCellRequest {
   field: string;
   value: any;
+} 
+
+export interface Subject {
+  id: number;
+  name: string;
+  credits: number;
+}
+
+export interface GroupInfo {
+  group_id: number;
+  group_name: string;
+  group_subject_id: number;
+  semester: number;
+}
+
+export interface JournalListItem {
+  group_subject_id: number;
+  group_name: string;
+  subject_name: string;
+  semester: number;
 }

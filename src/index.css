@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
 
 * {
   margin: 0;
@@ -11,198 +11,125 @@
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f0f4f8;
-  color: #1a202c;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #EBEBDC;
+  color: #6E6E73;
   min-height: 100vh;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Стили для скроллбара */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c4c9d4;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a0a8b8;
-}
-
-/* Анимации */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
 .animate-fade-in {
-  animation: fadeIn 0.4s ease-out;
+  animation: fadeIn 0.3s ease-out;
 }
 
-.animate-slide-in {
-  animation: slideIn 0.4s ease-out;
-}
-
-/* Градиентные тексты */
-.gradient-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Карточки с эффектом стекла */
-.glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-/* Кастомные кнопки */
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #28694B;
   color: white;
-  padding: 10px 24px;
+  padding: 14px 32px;
   border-radius: 12px;
   font-weight: 600;
-  transition: all 0.3s ease;
+  font-size: 1.1rem;
+  transition: all 0.2s;
   border: none;
   cursor: pointer;
 }
-
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+  background: #1d4f38;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(40, 105, 75, 0.3);
 }
-
 .btn-secondary {
-  background: #e2e8f0;
-  color: #4a5568;
-  padding: 10px 24px;
+  background: transparent;
+  color: #28694B;
+  border: 1.5px solid #28694B;
+  padding: 12px 28px;
   border-radius: 12px;
   font-weight: 600;
-  transition: all 0.3s ease;
-  border: none;
+  font-size: 1rem;
+  transition: all 0.2s;
   cursor: pointer;
 }
-
 .btn-secondary:hover {
-  background: #cbd5e0;
-  transform: translateY(-2px);
+  background: #28694B;
+  color: white;
 }
-
 .btn-danger {
-  background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+  background: #FF5F2D;
   color: white;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  border: none;
-  cursor: pointer;
-}
-
-.btn-danger:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(229, 62, 62, 0.4);
-}
-
-.btn-success {
-  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-  color: white;
-  padding: 10px 24px;
+  padding: 12px 28px;
   border-radius: 12px;
   font-weight: 600;
-  transition: all 0.3s ease;
+  font-size: 1rem;
+  transition: all 0.2s;
   border: none;
   cursor: pointer;
 }
-
-.btn-success:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(56, 161, 105, 0.4);
+.btn-danger:hover {
+  background: #e04a1a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 95, 45, 0.3);
 }
 
-/* Стили для таблицы */
-.table-container {
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-}
-
-.table-container table {
-  border-collapse: separate;
-  border-spacing: 0;
+.input-field {
   width: 100%;
+  padding: 16px 16px 16px 52px;
+  background: #ffffff;
+  border: 1.5px solid #d0d0d0;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  line-height: 1.5;
+}
+.input-field:focus {
+  border-color: #28694B;
+  box-shadow: 0 0 0 4px rgba(40, 105, 75, 0.12);
+}
+.input-field.error {
+  border-color: #FF5F2D;
 }
 
-.table-container th {
-  background: #f7fafc;
-  color: #2d3748;
-  font-weight: 600;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 14px 16px;
-  border-bottom: 2px solid #e2e8f0;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.table-container td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #edf2f7;
-  transition: background 0.2s ease;
-}
-
-.table-container tr:hover td {
-  background: #f7fafc;
-}
-
-.table-container .sticky-col {
-  position: sticky;
-  left: 0;
+.subject-card {
   background: white;
-  z-index: 5;
-  font-weight: 600;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s, transform 0.15s;
+  border: 1px solid #e0e0d0;
+}
+.subject-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.07);
+  transform: translateY(-2px);
 }
 
-.table-container tr:hover .sticky-col {
-  background: #f7fafc;
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 24px;
+  animation: fadeIn 0.25s ease-out;
+}
+.modal-content {
+  background: white;
+  border-radius: 24px;
+  padding: 36px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+body.modal-open {
+  overflow: hidden;
 }

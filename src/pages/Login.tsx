@@ -1,126 +1,385 @@
-// src/pages/Login.tsx
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
 export const Login = () => {
+  const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [department, setDepartment] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
       const res = await api.post('/auth/login', { email, password });
-      const token = res.data.access_token;
-      localStorage.setItem('access_token', token);
+      localStorage.setItem('access_token', res.data.access_token);
       navigate('/dashboard');
     } catch (err: any) {
-      console.error(err);
       setError(err.response?.data?.detail || 'Неверный email или пароль');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const res = await api.post('/auth/register', {
+        full_name: fullName,
+        email: regEmail,
+        password: regPassword,
+        department: department || undefined,
+      });
+      localStorage.setItem('access_token', res.data.access_token);
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Ошибка регистрации');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 relative overflow-hidden">
-      {/* Декоративные круги на фоне */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-2xl"></div>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-background p-6">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 border border-gray-200 animate-fade-in">
+        {/* Заголовок */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-primary">eJournal</h1>
+          <p className="text-secondary text-lg mt-2">Электронный журнал для преподавателей</p>
+        </div>
 
-      {/* Карточка входа */}
-      <div className="relative z-10 w-full max-w-md px-4">
-        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/30 animate-fade-in">
-          {/* Логотип (текстовый, без книги) */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-800 tracking-tight">
-              e<span className="text-indigo-600">Journal</span>
-            </h1>
-            <p className="text-gray-500 mt-2 text-sm">Электронный журнал для преподавателей</p>
-          </div>
+        {/* Табы */}
+        <div className="flex bg-gray-100 rounded-xl p-1 mb-8">
+          <button
+            onClick={() => { setIsRegister(false); setError(''); }}
+            className={`flex-1 py-3 text-lg font-medium rounded-lg transition ${
+              !isRegister ? 'bg-white shadow-sm text-primary' : 'text-secondary hover:text-gray-700'
+            }`}
+          >
+            Вход
+          </button>
+          <button
+            onClick={() => { setIsRegister(true); setError(''); }}
+            className={`flex-1 py-3 text-lg font-medium rounded-lg transition ${
+              isRegister ? 'bg-white shadow-sm text-primary' : 'text-secondary hover:text-gray-700'
+            }`}
+          >
+            Регистрация
+          </button>
+        </div>
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-5">
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                📧 Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none"
-                placeholder="teacher@univ.ru"
-                required
-              />
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                🔒 Пароль
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl animate-fade-in">
-                ⚠️ {error}
+        {/* Форма входа */}
+        {!isRegister ? (
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div>
+              <label className="block text-base font-medium text-secondary mb-1.5">Email</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-xl">📧</span>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-white border border-gray-300 rounded-xl text-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition"
+                  placeholder="teacher@univ.ru"
+                  required
+                />
               </div>
-            )}
-
+            </div>
+            <div>
+              <label className="block text-base font-medium text-secondary mb-1.5">Пароль</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-xl">🔒</span>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-white border border-gray-300 rounded-xl text-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            </div>
+            {error && <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-base rounded-xl">⚠️ {error}</div>}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-base"
+              className="w-full bg-primary hover:bg-primary/90 text-white text-xl font-semibold py-4 rounded-xl transition disabled:opacity-60"
             >
-              {loading ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Вход...
-                </span>
-              ) : (
-                'Войти в систему'
-              )}
+              {loading ? 'Загрузка...' : 'Войти'}
             </button>
           </form>
+        ) : (
+          /* Форма регистрации */
+          <form onSubmit={handleRegister} className="space-y-5">
+            <div>
+              <label className="block text-base font-medium text-secondary mb-1.5">Полное имя</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-xl">👤</span>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-white border border-gray-300 rounded-xl text-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition"
+                  placeholder="Иванова Анна Петровна"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-base font-medium text-secondary mb-1.5">Email</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-xl">📧</span>
+                <input
+                  type="email"
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-white border border-gray-300 rounded-xl text-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition"
+                  placeholder="teacher@univ.ru"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-base font-medium text-secondary mb-1.5">Пароль</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-xl">🔒</span>
+                <input
+                  type="password"
+                  value={regPassword}
+                  onChange={(e) => setRegPassword(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-white border border-gray-300 rounded-xl text-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-base font-medium text-secondary mb-1.5">Кафедра (опционально)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-xl">🏛️</span>
+                <input
+                  type="text"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-white border border-gray-300 rounded-xl text-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition"
+                  placeholder="Кафедра математики"
+                />
+              </div>
+            </div>
+            {error && <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-base rounded-xl">⚠️ {error}</div>}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-primary hover:bg-primary/90 text-white text-xl font-semibold py-4 rounded-xl transition disabled:opacity-60"
+            >
+              {loading ? 'Загрузка...' : 'Зарегистрироваться'}
+            </button>
+          </form>
+        )}
 
-          {/* Кнопка регистрации (заглушка) */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Ещё нет аккаунта?{' '}
-              <Link
-                to="/register"
-                className="font-semibold text-indigo-600 hover:text-indigo-800 transition"
-              >
-                Зарегистрироваться
-              </Link>
-            </p>
-          </div>
-
-          <div className="mt-4 text-center">
-            <p className="text-xs text-gray-400">
-              Тестовые данные: a.smirnova@univ.ru / 12345
-            </p>
-          </div>
+        <div className="mt-6 text-center">
+          <p className="text-sm text-secondary">
+            {!isRegister ? 'Тестовые данные: a.smirnova@univ.ru / 12345' : 'После регистрации вы будете автоматически авторизованы'}
+          </p>
         </div>
       </div>
     </div>
   );
 };
+// import { useState } from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import api from '../api/axios';
+
+// export const Login = () => {
+//   const [isRegister, setIsRegister] = useState(false);
+//   const [email, setEmail] = useState('');
+//   const [password, setPassword] = useState('');
+//   const [fullName, setFullName] = useState('');
+//   const [regEmail, setRegEmail] = useState('');
+//   const [regPassword, setRegPassword] = useState('');
+//   const [department, setDepartment] = useState('');
+//   const [error, setError] = useState('');
+//   const [loading, setLoading] = useState(false);
+//   const navigate = useNavigate();
+
+//   const handleLogin = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     setError('');
+//     setLoading(true);
+//     try {
+//       const res = await api.post('/auth/login', { email, password });
+//       localStorage.setItem('access_token', res.data.access_token);
+//       navigate('/dashboard');
+//     } catch (err: any) {
+//       setError(err.response?.data?.detail || 'Неверный email или пароль');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleRegister = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     setError('');
+//     setLoading(true);
+//     try {
+//       const res = await api.post('/auth/register', {
+//         full_name: fullName,
+//         email: regEmail,
+//         password: regPassword,
+//         department: department || undefined,
+//       });
+//       localStorage.setItem('access_token', res.data.access_token);
+//       navigate('/dashboard');
+//     } catch (err: any) {
+//       setError(err.response?.data?.detail || 'Ошибка регистрации');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div className="min-h-screen flex items-center justify-center bg-background p-6">
+//       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 border border-gray-200 animate-fade-in">
+//         <div className="text-center mb-8">
+//           <h1 className="text-4xl font-bold text-primary tracking-tight">
+//             e<span className="text-primary">Journal</span>
+//           </h1>
+//           <p className="text-secondary text-lg mt-2">Электронный журнал для преподавателей</p>
+//         </div>
+
+//         <div className="flex bg-gray-100 rounded-xl p-1 mb-8">
+//           <button
+//             onClick={() => { setIsRegister(false); setError(''); }}
+//             className={`flex-1 py-3 text-lg font-medium rounded-lg transition ${
+//               !isRegister ? 'bg-white shadow-sm text-primary' : 'text-secondary hover:text-gray-700'
+//             }`}
+//           >
+//             Вход
+//           </button>
+//           <button
+//             onClick={() => { setIsRegister(true); setError(''); }}
+//             className={`flex-1 py-3 text-lg font-medium rounded-lg transition ${
+//               isRegister ? 'bg-white shadow-sm text-primary' : 'text-secondary hover:text-gray-700'
+//             }`}
+//           >
+//             Регистрация
+//           </button>
+//         </div>
+
+//         {!isRegister ? (
+//           <form onSubmit={handleLogin}>
+//             <div className="mb-5">
+//               <label className="block text-base font-medium text-secondary mb-1.5">Email</label>
+//               <div className="relative">
+//                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-xl">📧</span>
+//                 <input
+//                   type="email"
+//                   value={email}
+//                   onChange={(e) => setEmail(e.target.value)}
+//                   className="input-field pl-12"
+//                   placeholder="teacher@univ.ru"
+//                   required
+//                 />
+//               </div>
+//             </div>
+//             <div className="mb-6">
+//               <label className="block text-base font-medium text-secondary mb-1.5">Пароль</label>
+//               <div className="relative">
+//                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-xl">🔒</span>
+//                 <input
+//                   type="password"
+//                   value={password}
+//                   onChange={(e) => setPassword(e.target.value)}
+//                   className="input-field pl-12"
+//                   placeholder="••••••••"
+//                   required
+//                 />
+//               </div>
+//             </div>
+//             {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-base rounded-xl">⚠️ {error}</div>}
+//             <button type="submit" disabled={loading} className="w-full btn-primary py-4 text-lg font-semibold disabled:opacity-60">
+//               {loading ? 'Загрузка...' : 'Войти'}
+//             </button>
+//           </form>
+//         ) : (
+//           <form onSubmit={handleRegister}>
+//             <div className="mb-5">
+//               <label className="block text-base font-medium text-secondary mb-1.5">Полное имя</label>
+//               <div className="relative">
+//                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-xl">👤</span>
+//                 <input
+//                   type="text"
+//                   value={fullName}
+//                   onChange={(e) => setFullName(e.target.value)}
+//                   className="input-field pl-12"
+//                   placeholder="Иванова Анна Петровна"
+//                   required
+//                 />
+//               </div>
+//             </div>
+//             <div className="mb-5">
+//               <label className="block text-base font-medium text-secondary mb-1.5">Email</label>
+//               <div className="relative">
+//                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-xl">📧</span>
+//                 <input
+//                   type="email"
+//                   value={regEmail}
+//                   onChange={(e) => setRegEmail(e.target.value)}
+//                   className="input-field pl-12"
+//                   placeholder="teacher@univ.ru"
+//                   required
+//                 />
+//               </div>
+//             </div>
+//             <div className="mb-5">
+//               <label className="block text-base font-medium text-secondary mb-1.5">Пароль</label>
+//               <div className="relative">
+//                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-xl">🔒</span>
+//                 <input
+//                   type="password"
+//                   value={regPassword}
+//                   onChange={(e) => setRegPassword(e.target.value)}
+//                   className="input-field pl-12"
+//                   placeholder="••••••••"
+//                   required
+//                 />
+//               </div>
+//             </div>
+//             <div className="mb-6">
+//               <label className="block text-base font-medium text-secondary mb-1.5">Кафедра (опционально)</label>
+//               <div className="relative">
+//                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-xl">🏛️</span>
+//                 <input
+//                   type="text"
+//                   value={department}
+//                   onChange={(e) => setDepartment(e.target.value)}
+//                   className="input-field pl-12"
+//                   placeholder="Кафедра математики"
+//                 />
+//               </div>
+//             </div>
+//             {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-base rounded-xl">⚠️ {error}</div>}
+//             <button type="submit" disabled={loading} className="w-full btn-primary py-4 text-lg font-semibold disabled:opacity-60">
+//               {loading ? 'Загрузка...' : 'Зарегистрироваться'}
+//             </button>
+//           </form>
+//         )}
+//         <div className="mt-6 text-center">
+//           <p className="text-sm text-secondary">
+//             {!isRegister ? 'Тестовые данные: a.smirnova@univ.ru / 12345' : 'После регистрации вы будете автоматически авторизованы'}
+//           </p>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };

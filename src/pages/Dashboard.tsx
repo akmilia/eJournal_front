@@ -1,64 +1,69 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { Subject, GroupInfo, JournalListItem } from '../types';
+import { Subject, JournalListItem } from '../types';
 import { Spinner } from '../components/Spinner';
-import { SubjectList } from '../components/SubjectList';
-import { GroupList } from '../components/GroupList';
+import { CreateSubjectModal } from '../components/CreateSubjectModal';
+import { CreateJournalModal } from '../components/CreateJournalModal';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [groups, setGroups] = useState<GroupInfo[]>([]);
-  const [allJournals, setAllJournals] = useState<JournalListItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
-  const [selectedGroupSubjectId, setSelectedGroupSubjectId] = useState<number | null>(null);
+  const [expandedSubjectId, setExpandedSubjectId] = useState<number | null>(null);
+  const [journalsMap, setJournalsMap] = useState<Record<number, JournalListItem[]>>({});
+  const [showCreateSubject, setShowCreateSubject] = useState(false);
+  const [showCreateJournal, setShowCreateJournal] = useState(false);
+  const [selectedSubjectForJournal, setSelectedSubjectForJournal] = useState<{ id: number; name: string } | null>(null);
   const [teacherName, setTeacherName] = useState('Преподаватель');
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [subRes, allJournalsRes] = await Promise.all([
-          api.get('/journals/subjects'),
-          api.get('/journals'),
-        ]);
-        setSubjects(subRes.data);
-        setAllJournals(allJournalsRes.data);
-        // Здесь можно добавить получение имени пользователя, если есть соответствующий эндпоинт
-        // setTeacherName('Анна Петровна Смирнова');
-      } catch (error) {
-        console.error(error);
-        if (error && typeof error === 'object' && 'response' in error) {
-          const err = error as { response: { status: number } };
-          if (err.response?.status === 401) {
-            localStorage.removeItem('access_token');
-            navigate('/login');
-          }
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [navigate]);
-
-  const handleSubjectSelect = async (subjectId: number) => {
-    setSelectedSubjectId(subjectId);
-    setSelectedGroupSubjectId(null);
+  const fetchSubjects = async () => {
     try {
-      const res = await api.get(`/journals/subjects/${subjectId}/groups`);
-      setGroups(res.data);
+      setLoading(true);
+      const res = await api.get('/journals/subjects');
+      setSubjects(res.data);
     } catch (error) {
       console.error(error);
-      setGroups([]);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response: { status: number } };
+        if (err.response?.status === 401) {
+          localStorage.removeItem('access_token');
+          navigate('/login');
+        }
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleGroupSelect = (groupSubjectId: number) => {
-    setSelectedGroupSubjectId(groupSubjectId);
-    navigate(`/journal/${groupSubjectId}`);
+  useEffect(() => {
+    fetchSubjects();
+  }, [navigate]);
+
+  const fetchJournalsForSubject = async (subjectId: number) => {
+    try {
+      const res = await api.get(`/journals/subjects/${subjectId}/groups`);
+      const journals = res.data.map((g: any) => ({
+        group_subject_id: g.group_subject_id,
+        group_name: g.group_name,
+        subject_name: subjects.find(s => s.id === subjectId)?.name || '',
+        semester: g.semester,
+      }));
+      setJournalsMap(prev => ({ ...prev, [subjectId]: journals }));
+    } catch (error) {
+      console.error('Ошибка загрузки журналов', error);
+    }
+  };
+
+  const toggleExpand = (subjectId: number) => {
+    if (expandedSubjectId === subjectId) {
+      setExpandedSubjectId(null);
+    } else {
+      setExpandedSubjectId(subjectId);
+      if (!journalsMap[subjectId]) {
+        fetchJournalsForSubject(subjectId);
+      }
+    }
   };
 
   const handleLogout = () => {
@@ -66,76 +71,125 @@ export const Dashboard = () => {
     navigate('/login');
   };
 
+  const handleCreateSubject = async (name: string, credits: number) => {
+    try {
+      await api.post('/journals/subjects', { name, credits });
+      await fetchSubjects();
+    } catch (error: any) {
+      alert(error.response?.data?.detail || 'Ошибка создания предмета');
+    }
+  };
+
+  const handleCreateJournal = async (subjectId: number, groupId: number, semester: number) => {
+    try {
+      await api.post('/journals/journals', {
+        subject_id: subjectId,
+        group_id: groupId,
+        semester,
+      });
+      if (expandedSubjectId) {
+        await fetchJournalsForSubject(expandedSubjectId);
+      }
+    } catch (error: any) {
+      alert(error.response?.data?.detail || 'Ошибка создания журнала');
+    }
+  };
+
+  const openCreateJournal = (subjectId: number, subjectName: string) => {
+    setSelectedSubjectForJournal({ id: subjectId, name: subjectName });
+    setShowCreateJournal(true);
+  };
+
   if (loading) return <Spinner />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Шапка (без иконки) */}
-        <header className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">
-              e<span className="text-indigo-600">Journal</span>
-            </h1>
-            <p className="text-sm text-gray-500">Добро пожаловать, {teacherName}</p>
-          </div>
-          <button onClick={handleLogout} className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition shadow-sm hover:shadow">
-            Выйти
+    <div className="min-h-screen bg-background">
+      {/* Шапка на всю ширину с отступами */}
+      <header className="bg-white border-b border-gray-200 py-6 px-10 flex items-center justify-between shadow-sm">
+        <div>
+          <h1 className="text-3xl font-bold text-primary">eJournal</h1>
+          <p className="text-lg text-secondary mt-1">Добро пожаловать, {teacherName}</p>
+        </div>
+        <button onClick={handleLogout} className="btn-danger text-lg px-8 py-3">
+          Выйти
+        </button>
+      </header>
+
+      <div className="max-w-6xl mx-auto px-10 py-10">
+        <div className="flex justify-end mb-8">
+          <button onClick={() => setShowCreateSubject(true)} className="btn-primary flex items-center gap-2 text-lg px-8 py-3.5">
+            <span className="text-2xl leading-none">+</span> Создать предмет
           </button>
-        </header>
+        </div>
 
-        {/* Основная сетка с карточками (без изменений) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition hover:shadow-md">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">📚</span>
-              <h2 className="text-lg font-semibold text-gray-800">Мои предметы</h2>
-              <span className="ml-auto bg-indigo-100 text-indigo-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">
-                {subjects.length}
-              </span>
+        <div className="space-y-5">
+          {subjects.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
+              <p className="text-secondary text-xl">У вас пока нет предметов. Создайте первый!</p>
             </div>
-            <SubjectList subjects={subjects} onSelect={handleSubjectSelect} selectedId={selectedSubjectId} />
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition hover:shadow-md">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">👥</span>
-              <h2 className="text-lg font-semibold text-gray-800">Группы</h2>
-              <span className="ml-auto bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">
-                {groups.length}
-              </span>
-            </div>
-            {selectedSubjectId ? (
-              <GroupList groups={groups} onSelect={handleGroupSelect} selectedId={selectedGroupSubjectId} />
-            ) : (
-              <p className="text-gray-400 text-sm text-center py-8">Выберите предмет</p>
-            )}
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition hover:shadow-md">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">⚡</span>
-              <h2 className="text-lg font-semibold text-gray-800">Быстрый доступ</h2>
-            </div>
-            <div className="max-h-64 overflow-y-auto space-y-1.5">
-              {allJournals.length === 0 ? (
-                <p className="text-gray-400 text-sm text-center py-8">Нет журналов</p>
-              ) : (
-                allJournals.map((j) => (
+          ) : (
+            subjects.map((subject) => (
+              <div key={subject.id} className="subject-card">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-primary">{subject.name}</h2>
+                    <p className="text-lg text-secondary mt-1">{subject.credits} зач. ед.</p>
+                  </div>
                   <button
-                    key={j.group_subject_id}
-                    onClick={() => navigate(`/journal/${j.group_subject_id}`)}
-                    className="w-full text-left px-4 py-2.5 rounded-xl transition-all text-sm hover:bg-gray-50 border border-transparent hover:border-gray-200"
+                    onClick={() => toggleExpand(subject.id)}
+                    className="text-primary hover:text-[#1d4f38] font-medium text-lg flex items-center gap-2"
                   >
-                    <div className="font-medium text-gray-800">{j.group_name}</div>
-                    <div className="text-xs text-gray-500">{j.subject_name} · Семестр {j.semester}</div>
+                    {expandedSubjectId === subject.id ? 'Свернуть ▲' : 'Развернуть ▼'}
                   </button>
-                ))
-              )}
-            </div>
-          </div>
+                </div>
+
+                {expandedSubjectId === subject.id && (
+                  <div className="mt-5 pt-5 border-t border-gray-200 animate-fade-in">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-medium text-secondary">Журналы по предмету</h3>
+                      <button
+                        onClick={() => openCreateJournal(subject.id, subject.name)}
+                        className="text-lg text-primary hover:text-[#1d4f38] font-medium flex items-center gap-1"
+                      >
+                        + Добавить журнал
+                      </button>
+                    </div>
+                    {journalsMap[subject.id]?.length ? (
+                      <div className="space-y-3">
+                        {journalsMap[subject.id].map((j) => (
+                          <div
+                            key={j.group_subject_id}
+                            onClick={() => navigate(`/journal/${j.group_subject_id}`)}
+                            className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 cursor-pointer transition"
+                          >
+                            <span className="font-medium text-primary text-lg">{j.group_name}</span>
+                            <span className="text-lg text-secondary">Семестр {j.semester}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-lg text-secondary">Нет журналов. Добавьте первый.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
+
+      <CreateSubjectModal
+        isOpen={showCreateSubject}
+        onClose={() => setShowCreateSubject(false)}
+        onCreate={handleCreateSubject}
+      />
+      <CreateJournalModal
+        isOpen={showCreateJournal}
+        onClose={() => setShowCreateJournal(false)}
+        subjectId={selectedSubjectForJournal?.id || 0}
+        subjectName={selectedSubjectForJournal?.name || ''}
+        onCreate={handleCreateJournal}
+      />
     </div>
   );
 };
