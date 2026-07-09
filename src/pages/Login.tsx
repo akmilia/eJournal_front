@@ -1,4 +1,5 @@
-import { useState } from 'react';
+// src/pages/Login.tsx
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
@@ -12,7 +13,21 @@ export const Login = () => {
   const [department, setDepartment] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
+
+  // При загрузке страницы — достаём сохранённые данные
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('savedEmail');
+    const savedPassword = localStorage.getItem('savedPassword');
+    const savedRemember = localStorage.getItem('rememberMe');
+    
+    if (savedEmail && savedRemember === 'true') {
+      setEmail(savedEmail);
+      setPassword(savedPassword || '');
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +36,18 @@ export const Login = () => {
     try {
       const res = await api.post('/auth/login', { email, password });
       localStorage.setItem('access_token', res.data.access_token);
+      
+      // Если включено запоминание — сохраняем
+      if (rememberMe) {
+        localStorage.setItem('savedEmail', email);
+        localStorage.setItem('savedPassword', password);
+        localStorage.setItem('rememberMe', 'true');
+      } else {
+        localStorage.removeItem('savedEmail');
+        localStorage.removeItem('savedPassword');
+        localStorage.removeItem('rememberMe');
+      }
+      
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Неверный email или пароль');
@@ -86,6 +113,7 @@ export const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="teacher@univ.ru"
+                  autoComplete="email"
                   required
                 />
               </div>
@@ -100,9 +128,24 @@ export const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   required
                 />
               </div>
+            </div>
+
+            {/* Чекбокс "Запомнить меня" */}
+            <div className="flex items-center gap-2 -mt-2">
+              <input
+                type="checkbox"
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 accent-primary cursor-pointer"
+              />
+              <label htmlFor="rememberMe" className="text-sm text-secondary cursor-pointer">
+                Запомнить меня
+              </label>
             </div>
 
             {error && (

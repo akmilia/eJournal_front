@@ -15,7 +15,8 @@ function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/journal/:groupSubjectId" element={<JournalPage />} />
+     
+<Route path="/journal/:groupSubjectId/:groupNameFromUrl/:subjectNameFromUrl" element={<JournalPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>

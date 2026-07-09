@@ -1,4 +1,4 @@
-// src/pages/Dashboard.tsx (обновлённая версия)
+// src/pages/Dashboard.tsx
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
@@ -134,7 +134,7 @@ export const Dashboard = () => {
       </header>
 
       <div className="dashboard-content">
-        {/* ГРУППЫ — вертикальный список как предметы */}
+        {/* ГРУППЫ */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-primary">👥 Группы</h2>
@@ -167,7 +167,7 @@ export const Dashboard = () => {
           )}
         </div>
 
-        {/* ПРЕДМЕТЫ — вертикальный список */}
+        {/* ПРЕДМЕТЫ */}
         <div>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-primary">📚 Мои предметы</h2>
@@ -213,7 +213,9 @@ export const Dashboard = () => {
                         <div
                           key={j.group_subject_id}
                           className="journal-item"
-                          onClick={() => navigate(`/journal/${j.group_subject_id}`)}
+                          onClick={() => {
+                            navigate(`/journal/${j.group_subject_id}/${encodeURIComponent(j.group_name)}/${encodeURIComponent(subject.name)}`);
+                          }}
                         >
                           <span className="journal-name">{j.group_name}</span>
                           <span className="journal-semester">Семестр {j.semester}</span>

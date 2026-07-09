@@ -7,11 +7,20 @@ import { JournalTable } from '../components/JournalTable';
 import { Spinner } from '../components/Spinner';
 
 export const JournalPage = () => {
-  const { groupSubjectId } = useParams<{ groupSubjectId: string }>();
+  const { groupSubjectId, groupNameFromUrl, subjectNameFromUrl } = useParams<{
+    groupSubjectId: string;
+    groupNameFromUrl: string;
+    subjectNameFromUrl: string;
+  }>();
   const navigate = useNavigate();
+  
   const [journalData, setJournalData] = useState<JournalData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Декодируем названия из URL
+  const groupName = groupNameFromUrl ? decodeURIComponent(groupNameFromUrl) : 'Группа';
+  const subjectName = subjectNameFromUrl ? decodeURIComponent(subjectNameFromUrl) : 'Предмет';
 
   useEffect(() => {
     const fetchJournal = async () => {
@@ -60,7 +69,13 @@ export const JournalPage = () => {
           </svg>
           Назад
         </button>
-        <h1 className="page-title">📊 Журнал</h1>
+
+        {/* Названия из URL */}
+        <div className="text-center">
+          <h1 className="page-title text-2xl font-bold text-primary">{subjectName}</h1>
+          <p className="text-secondary text-base">{groupName}</p>
+        </div>
+
         <div style={{ width: '100px' }}></div>
       </div>
 

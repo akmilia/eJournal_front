@@ -76,4 +76,11 @@ export interface CreateGroupRequest {
   headman_id?: number;
   student_ids?: number[];
   new_students?: string[]; // ФИО новых студентов
+} 
+export interface JournalData {
+  group_subject_id: number;
+  group_name: string;      // добавить
+  subject_name: string;    // добавить
+  columns_config: ColumnConfig[];
+  students: StudentRow[];
 }

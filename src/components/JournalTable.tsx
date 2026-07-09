@@ -170,7 +170,6 @@ export const JournalTable = ({ journalData, groupSubjectId, onUpdate }: Props) =
       {/* Заголовок таблицы */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-6 border-b border-gray-100">
         <div>
-          <h2 className="text-2xl font-bold text-primary">📊 Журнал</h2>
           <p className="text-base text-secondary">
             {students.length} студентов · {columns.length} колонок
           </p>
